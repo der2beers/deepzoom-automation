@@ -1,29 +1,22 @@
 #ls!/bin/bash
 # NOTE : Quote it else use array to avoid problems #
-FILES="/home/to/workspace/all-panoramas/*.tif"
+file_path=/home/to/all-panoramas
+FILES="$file_path/*.tif"
 counter=0
+mkdir $file_path/output
 for absolute_filepath in $FILES
 do
     echo "PWD is $(pwd)"
-    echo "File is $absolute_filepath"
+    echo "Processing $absolute_filepath ..."
     file_dirname=$(dirname $absolute_filepath)
     file_basename=$(basename $absolute_filepath)
     basename_noext=${file_basename%.tif}
     destination_file=${basename_noext}.dzi
     destination_python_file=$file_dirname/$basename_noext.py
-    echo destination_dzi
 
-
-    echo "PWD is $(pwd)"
-    echo "File is $absolute_filepath"
-    echo "Basename is $basename_noext"
-    echo "Dirname is $file_dirname"
-    echo "Destpath is $file_dirname/$basename_noext"
-    echo "Destpy is $destination_python_file"
-
-    mkdir $file_dirname/$basename_noext
+    mkdir $file_dirname/output/$basename_noext
     export f
-    export destination
+    export file_dirname
     export destination_filename
 cat > $destination_python_file <<EOF
 #!/usr/bin/env python3
@@ -40,18 +33,18 @@ creator = deepzoom.ImageCreator(
     tile_size=128,
     tile_overlap=2,
     tile_format="png",
-    image_quality=0.8,
+    image_quality=1,
     resize_filter="bicubic",
 )
 
 # Create Deep Zoom image pyramid from source
-creator.create(SOURCE, "$basename_noext/$destination_file")
+creator.create(SOURCE, "$file_dirname/output/$destination_file")
 EOF
     echo "Counter is $counter"
     ((counter++))
     chmod u+x $destination_python_file
     cd $file_dirname
     ./$basename_noext.py
-    #rm $destination_python_file
-
+    rm $destination_python_file
+    echo output/$basename_noext/$destination_file >> $file_dirname/output/dzi-paths
 done
